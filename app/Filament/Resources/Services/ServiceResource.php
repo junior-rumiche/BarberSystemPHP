@@ -386,7 +386,8 @@ class ServiceResource extends Resource
                     ->label('Categoría')
                     ->relationship('category', 'name')
                     ->searchable()
-                    ->preload(),
+                    ->preload()
+                    ->visible(true),
 
                 \Filament\Tables\Filters\Filter::make('only_active')
                     ->label('Solo Activos')
