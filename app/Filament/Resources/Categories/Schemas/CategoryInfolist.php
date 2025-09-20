@@ -37,13 +37,11 @@ class CategoryInfolist
                             ->color(fn (string $state): string => match ($state) {
                                 'active' => 'success',
                                 'inactive' => 'danger',
-                                'draft' => 'warning',
                                 default => 'gray',
                             })
                             ->formatStateUsing(fn (string $state): string => match ($state) {
                                 'active' => 'Activo',
                                 'inactive' => 'Inactivo',
-                                'draft' => 'Borrador',
                                 default => $state,
                             }),
                         

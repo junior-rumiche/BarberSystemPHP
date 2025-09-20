@@ -19,6 +19,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -53,15 +54,18 @@ class CategoryResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (string $operation, $state, \Filament\Forms\Set $set) => 
-                        $operation === 'create' ? $set('slug', \Illuminate\Support\Str::slug($state)) : null
-                    ),
+                    ->afterStateUpdated(function (string $operation, $state, $set) {
+                        if ($operation !== 'edit') {
+                            $set('slug', \Illuminate\Support\Str::slug($state));
+                        }
+                    }),
                 TextInput::make('slug')
                     ->label('Slug')
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true)
-                    ->rules(['alpha_dash']),
+                    ->rules(['alpha_dash'])
+                    ->helperText('Se genera automáticamente desde el nombre. Puedes editarlo si es necesario.'),
                 Textarea::make('description')
                     ->label('Descripción')
                     ->rows(3)
@@ -70,16 +74,49 @@ class CategoryResource extends Resource
                     ->label('Imagen de Portada')
                     ->image()
                     ->directory('categories')
-                    ->visibility('public'),
-                Select::make('status')
-                    ->label('Estado')
-                    ->options([
-                        'active' => 'Activo',
-                        'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
-                    ])
-                    ->default('active')
-                    ->required(),
+                    ->visibility('public')
+                    ->columnSpanFull()
+                    ->imagePreviewHeight('250')
+                    ->panelLayout('integrated'),
+                Toggle::make('status')
+                    ->label('Estado Activo')
+                    ->helperText('Activa o desactiva esta categoría')
+                    ->default(true)
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true)
+                    ->dehydrateStateUsing(fn ($state) => $state ? 'active' : 'inactive'),
+            ]);
+    }
+
+    public static function viewForm(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                TextInput::make('name')
+                    ->label('Nombre')
+                    ->disabled(),
+                TextInput::make('slug')
+                    ->label('Slug')
+                    ->disabled(),
+                Textarea::make('description')
+                    ->label('Descripción')
+                    ->rows(3)
+                    ->disabled()
+                    ->columnSpanFull(),
+                FileUpload::make('cover_image')
+                    ->label('Imagen de Portada')
+                    ->image()
+                    ->disabled()
+                    ->columnSpanFull()
+                    ->imagePreviewHeight('250')
+                    ->panelLayout('integrated'),
+                Toggle::make('status')
+                    ->label('Estado Activo')
+                    ->disabled()
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true),
             ]);
     }
 
@@ -102,20 +139,19 @@ class CategoryResource extends Resource
                 ImageEntry::make('cover_image')
                     ->label('Imagen de Portada')
                     ->height(200)
-                    ->placeholder('Sin imagen'),
+                    ->placeholder('Sin imagen')
+                    ->columnSpanFull(),
                 TextEntry::make('status')
                     ->label('Estado')
                     ->badge()
                     ->color(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'success',
                         'inactive' => 'danger',
-                        'draft' => 'warning',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
                         default => $state,
                     }),
                 TextEntry::make('created_at')
@@ -158,13 +194,11 @@ class CategoryResource extends Resource
                     ->color(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'success',    // 🟢 Verde para Activo
                         'inactive' => 'danger',   // 🔴 Rojo para Inactivo
-                        'draft' => 'warning',     // 🟡 Amarillo para Borrador
                         default => 'gray',
                     })
                     ->formatStateUsing(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
                         default => $state,
                     })
                     ->searchable(),
@@ -185,7 +219,6 @@ class CategoryResource extends Resource
                     ->options([
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
                     ])
                     ->default('active'),
                 \Filament\Tables\Filters\Filter::make('only_active')
@@ -198,7 +231,11 @@ class CategoryResource extends Resource
                     ViewAction::make()
                         ->label('Ver')
                         ->icon('heroicon-o-eye')
-                        ->color('info'),
+                        ->color('info')
+                        ->form(fn (Schema $schema) => static::viewForm($schema))
+                        ->modalHeading('Ver Categoría')
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Cerrar'),
                     EditAction::make()
                         ->label('Editar')
                         ->icon('heroicon-o-pencil')
@@ -267,16 +304,7 @@ class CategoryResource extends Resource
                         ->modalDescription('¿Estás seguro de que quieres desactivar las categorías seleccionadas?')
                         ->modalSubmitActionLabel('Sí, desactivar')
                         ->modalCancelActionLabel('Cancelar'),
-                    BulkAction::make('bulk_draft')
-                        ->label('Marcar como Borrador')
-                        ->icon('heroicon-o-document-text')
-                        ->color('warning')
-                        ->action(fn ($records) => $records->each->update(['status' => 'draft']))
-                        ->requiresConfirmation()
-                        ->modalHeading('Marcar como Borrador')
-                        ->modalDescription('¿Estás seguro de que quieres marcar las categorías seleccionadas como borrador?')
-                        ->modalSubmitActionLabel('Sí, marcar')
-                        ->modalCancelActionLabel('Cancelar'),
+
                     DeleteBulkAction::make()
                         ->label('Eliminar Seleccionados')
                         ->requiresConfirmation()

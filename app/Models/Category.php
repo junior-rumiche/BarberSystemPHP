@@ -34,8 +34,15 @@ class Category extends Model
         });
 
         static::updating(function ($category) {
-            if ($category->isDirty('name') && empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
+            // Solo regenerar el slug si el nombre cambió y el slug está vacío o es igual al slug del nombre anterior
+            if ($category->isDirty('name')) {
+                $originalName = $category->getOriginal('name');
+                $originalSlug = Str::slug($originalName);
+                
+                // Si el slug actual es igual al slug del nombre original, actualizarlo
+                if (empty($category->slug) || $category->slug === $originalSlug) {
+                    $category->slug = Str::slug($category->name);
+                }
             }
         });
     }

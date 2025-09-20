@@ -46,13 +46,11 @@ class CategoriesTable
                     ->label('Estado')
                     ->colors([
                         'success' => 'active',
-                        'warning' => 'draft',
                         'danger' => 'inactive',
                     ])
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
                         default => $state,
                     }),
                 
@@ -74,7 +72,6 @@ class CategoriesTable
                     ->options([
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
-                        'draft' => 'Borrador',
                     ]),
             ])
             ->recordActions([
@@ -87,8 +84,7 @@ class CategoriesTable
                     ->action(function ($record) {
                         $newStatus = match ($record->status->value) {
                             'active' => 'inactive',
-                            'inactive' => 'draft',
-                            'draft' => 'active',
+                            'inactive' => 'active',
                         };
                         $record->update(['status' => $newStatus]);
                     })

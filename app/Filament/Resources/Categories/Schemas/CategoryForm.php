@@ -40,15 +40,14 @@ class CategoryForm
                             ->visibility('public')
                             ->columnSpanFull(),
                         
-                        \Filament\Forms\Components\Select::make('status')
-                            ->label('Estado')
-                            ->options([
-                                'active' => 'Activo',
-                                'inactive' => 'Inactivo',
-                                'draft' => 'Borrador',
-                            ])
-                            ->default('active')
-                            ->required(),
+                        \Filament\Forms\Components\Toggle::make('status')
+                            ->label('Estado Activo')
+                            ->helperText('Activa o desactiva esta categoría')
+                            ->default(true)
+                            ->onColor('success')
+                            ->offColor('danger')
+                            ->formatStateUsing(fn ($state) => $state === 'active' || $state === true)
+                            ->dehydrateStateUsing(fn ($state) => $state ? 'active' : 'inactive'),
                     ])
                     ->columns(2),
             ]);
