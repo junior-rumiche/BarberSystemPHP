@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->brandName("Cuatro Pelos")
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverResources(in: app_path('Filament/Resources/Clients'), for: 'App\Filament\Resources\Clients')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 Dashboard::class,
