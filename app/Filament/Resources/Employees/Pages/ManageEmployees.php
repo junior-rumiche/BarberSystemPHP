@@ -20,4 +20,11 @@ class ManageEmployees extends ManageRecords
                 ->createAnother(false),
         ];
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\EmployeesChart::class,
+        ];
+    }
 }
