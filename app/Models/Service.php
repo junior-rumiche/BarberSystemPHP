@@ -50,6 +50,11 @@ class Service extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function serviceImages()
+    {
+        return $this->hasMany(ServiceImage::class);
+    }
+
     public function getFormattedPriceAttribute(): string
     {
         return 'S/ ' . number_format($this->price, 2);

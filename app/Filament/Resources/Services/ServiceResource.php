@@ -20,6 +20,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\RichEditor;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -53,7 +54,7 @@ class ServiceResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
-                
+
                 TextInput::make('name')
                     ->label('Nombre del Servicio')
                     ->required()
@@ -64,7 +65,7 @@ class ServiceResource extends Resource
                             $set('slug', \Illuminate\Support\Str::slug($state));
                         }
                     }),
-                
+
                 TextInput::make('slug')
                     ->label('Slug')
                     ->required()
@@ -72,16 +73,7 @@ class ServiceResource extends Resource
                     ->unique(ignoreRecord: true)
                     ->rules(['alpha_dash'])
                     ->helperText('Se genera automáticamente desde el nombre. Puedes editarlo si es necesario.'),
-                
-                Toggle::make('status')
-                    ->label('Estado Activo')
-                    ->helperText('Activa o desactiva este servicio')
-                    ->default(true)
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true)
-                    ->dehydrateStateUsing(fn ($state) => $state ? 'active' : 'inactive'),
-                
+
                 TextInput::make('price')
                     ->label('Precio (S/)')
                     ->numeric()
@@ -89,26 +81,72 @@ class ServiceResource extends Resource
                     ->step(0.01)
                     ->minValue(0)
                     ->required(),
-                
+
                 TextInput::make('time_estimate_minutes')
                     ->label('Duración (minutos)')
                     ->numeric()
                     ->suffix('min')
                     ->minValue(1)
                     ->placeholder('Ej: 30'),
-                
-                Textarea::make('description')
+
+                RichEditor::make('description')
                     ->label('Descripción')
-                    ->rows(3)
+                    ->toolbarButtons([
+                        'attachFiles',
+                        'blockquote',
+                        'bold',
+                        'bulletList',
+                        'codeBlock',
+                        'h2',
+                        'h3',
+                        'italic',
+                        'link',
+                        'orderedList',
+                        'redo',
+                        'strike',
+                        'underline',
+                        'undo',
+                    ])
                     ->columnSpanFull(),
-                
+
                 FileUpload::make('cover_image_url')
                     ->label('Imagen del Servicio')
                     ->image()
                     ->directory('services')
-                    ->visibility('public')
+                    ->columnSpanFull()
                     ->imagePreviewHeight('300')
                     ->panelLayout('integrated')
+                    ->panelAspectRatio('2:1')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('1920')
+                    ->imageResizeTargetHeight('1080')
+                    ->imageEditor()
+                    ->imageEditorAspectRatios([
+                        '16:9',
+                        '4:3',
+                        '1:1',
+                    ])
+                    ->previewable(true),
+
+                Toggle::make('status')
+                    ->label('Estado Activo')
+                    ->helperText('Activa o desactiva este servicio')
+                    ->default(true)
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->formatStateUsing(fn($state) => $state === 'active' || $state === true)
+                    ->dehydrateStateUsing(fn($state) => $state ? 'active' : 'inactive'),
+
+                \Filament\Forms\Components\Repeater::make('serviceImages')
+                    ->label('Galería de Imágenes')
+                    ->relationship()
+                    ->schema([
+                        FileUpload::make('image')
+                            ->label('Imagen')
+                            ->image()
+                            ->directory('service_gallery')
+                            ->required(),
+                    ])
                     ->columnSpanFull(),
             ]);
     }
@@ -121,45 +159,56 @@ class ServiceResource extends Resource
                     ->label('Categoría')
                     ->relationship('category', 'name')
                     ->disabled(),
-                
+
                 TextInput::make('name')
                     ->label('Nombre del Servicio')
                     ->disabled(),
-                
+
                 TextInput::make('slug')
                     ->label('Slug')
                     ->disabled(),
-                
+                TextInput::make('price')
+                    ->label('Precio (S/)')
+                    ->prefix('S/')
+                    ->disabled(),
+
+                TextInput::make('time_estimate_minutes')
+                    ->label('Duración (minutos)')
+                    ->suffix('min')
+                    ->disabled(),
+
+                \Filament\Forms\Components\RichEditor::make('description')
+                    ->label('Descripción')
+                    ->disabled()
+                    ->columnSpanFull(),
+
+                FileUpload::make('cover_image_url')
+                    ->label('Imagen del Servicio')
+                    ->image()
+                    ->directory('services')
+                    ->imagePreviewHeight('300')
+                    ->panelLayout('integrated')
+                    ->columnSpanFull(),
+
                 Toggle::make('status')
                     ->label('Estado Activo')
                     ->disabled()
                     ->onColor('success')
                     ->offColor('danger')
-                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true),
-                
-                TextInput::make('price')
-                    ->label('Precio (S/)')
-                    ->prefix('S/')
-                    ->disabled(),
-                
-                TextInput::make('time_estimate_minutes')
-                    ->label('Duración (minutos)')
-                    ->suffix('min')
-                    ->disabled(),
-                
-                Textarea::make('description')
-                    ->label('Descripción')
-                    ->rows(3)
-                    ->disabled()
+                    ->formatStateUsing(fn($state) => $state === 'active' || $state === true),
+
+                \Filament\Forms\Components\Repeater::make('serviceImages')
+                    ->label('Galería de Imágenes')
+                    ->relationship('serviceImages')
+                    ->schema([
+                        FileUpload::make('image')
+                            ->label('Imagen')
+                            ->image()
+                            ->directory('service_gallery')
+                            ->disabled(),
+                    ])
                     ->columnSpanFull(),
-                
-                FileUpload::make('cover_image_url')
-                    ->label('Imagen del Servicio')
-                    ->image()
-                    ->disabled()
-                    ->imagePreviewHeight('300')
-                    ->panelLayout('integrated')
-                    ->columnSpanFull(),
+
             ]);
     }
 
@@ -174,65 +223,77 @@ class ServiceResource extends Resource
                             ->inlineLabel()
                             ->badge()
                             ->color('info'),
-                        
+
                         \Filament\Infolists\Components\TextEntry::make('name')
                             ->label('Nombre del Servicio')
                             ->inlineLabel(),
-                        
+
                         \Filament\Infolists\Components\TextEntry::make('slug')
                             ->label('Slug')
                             ->inlineLabel()
                             ->copyable()
                             ->copyMessage('Slug copiado'),
-                        
+
                         \Filament\Infolists\Components\TextEntry::make('status')
                             ->label('Estado')
                             ->inlineLabel()
                             ->badge()
-                            ->color(fn ($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
+                            ->color(fn($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
                                 'active' => 'success',
                                 'inactive' => 'danger',
                                 default => 'gray',
                             })
-                            ->formatStateUsing(fn ($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
+                            ->formatStateUsing(fn($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
                                 'active' => 'Activo',
                                 'inactive' => 'Inactivo',
                                 default => $state,
                             }),
-                        
+
                         \Filament\Infolists\Components\TextEntry::make('price')
                             ->label('Precio (S/)')
                             ->inlineLabel()
-                            ->formatStateUsing(fn ($state): string => 'S/ ' . number_format($state, 2))
+                            ->formatStateUsing(fn($state): string => 'S/ ' . number_format($state, 2))
                             ->color('success')
                             ->weight('bold'),
-                        
+
                         \Filament\Infolists\Components\TextEntry::make('time_estimate_minutes')
                             ->label('Duración (minutos)')
                             ->inlineLabel()
-                            ->formatStateUsing(fn ($state): string => $state ? $state . ' min' : 'No especificado')
+                            ->formatStateUsing(fn($state): string => $state ? $state . ' min' : 'No especificado')
                             ->badge()
                             ->color('warning'),
-                        
-                        \Filament\Infolists\Components\TextEntry::make('description')
+
+                        \Filament\Infolists\Components\RichEditorEntry::make('description')
                             ->label('Descripción')
                             ->inlineLabel()
                             ->placeholder('Sin descripción')
                             ->columnSpanFull(),
-                        
+
                         \Filament\Infolists\Components\ImageEntry::make('cover_image_url')
                             ->label('Imagen del Servicio')
                             ->height(300)
                             ->width(400)
                             ->placeholder('Sin imagen')
                             ->columnSpanFull(),
-                        
+
+                        \Filament\Infolists\Components\RepeatableEntry::make('serviceImages')
+                            ->label('Galería de Imágenes')
+                            ->relationship('serviceImages')
+                            ->schema([
+                                \Filament\Infolists\Components\ImageEntry::make('image')
+                                    ->height(120)
+                                    ->width(180)
+                                    ->label('Imagen')
+                                    ->placeholder('Sin imagen'),
+                            ])
+                            ->columnSpanFull(),
+
                         \Filament\Infolists\Components\Fieldset::make('Información del Sistema')
                             ->schema([
                                 \Filament\Infolists\Components\TextEntry::make('created_at')
                                     ->label('Creado')
                                     ->dateTime('d/m/Y H:i:s'),
-                                
+
                                 \Filament\Infolists\Components\TextEntry::make('updated_at')
                                     ->label('Actualizado')
                                     ->dateTime('d/m/Y H:i:s'),
@@ -252,60 +313,60 @@ class ServiceResource extends Resource
                     ->label('Imagen')
                     ->circular()
                     ->defaultImageUrl(url('/images/placeholder.png')),
-                
+
                 TextColumn::make('name')
                     ->label('Servicio')
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                
+
                 TextColumn::make('category.name')
                     ->label('Categoría')
                     ->badge()
                     ->color('info')
                     ->searchable()
                     ->sortable(),
-                
+
                 TextColumn::make('price')
                     ->label('Precio')
                     ->money('PEN')
                     ->sortable()
                     ->color('success')
                     ->weight('bold'),
-                
+
                 TextColumn::make('formatted_time')
                     ->label('Duración')
                     ->badge()
                     ->color('warning'),
-                
+
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn ($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
+                    ->color(fn($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
                         'active' => 'success',    // 🟢 Verde para Activo
                         'inactive' => 'danger',   // 🔴 Rojo para Inactivo
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn ($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
+                    ->formatStateUsing(fn($state): string => match ($state instanceof ServiceStatusEnum ? $state->value : $state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
                         default => $state,
                     })
                     ->searchable(),
-                
+
                 TextColumn::make('slug')
                     ->label('Slug')
                     ->searchable()
                     ->copyable()
                     ->copyMessage('Slug copiado')
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                
+
                 TextColumn::make('updated_at')
                     ->label('Actualizado')
                     ->dateTime('d/m/Y H:i')
@@ -320,16 +381,16 @@ class ServiceResource extends Resource
                         'inactive' => 'Inactivo',
                     ])
                     ->default('active'),
-                
+
                 \Filament\Tables\Filters\SelectFilter::make('category_id')
                     ->label('Categoría')
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
-                
+
                 \Filament\Tables\Filters\Filter::make('only_active')
                     ->label('Solo Activos')
-                    ->query(fn ($query) => $query->where('status', 'active'))
+                    ->query(fn($query) => $query->where('status', 'active'))
                     ->default(),
             ])
             ->actions([
@@ -338,7 +399,7 @@ class ServiceResource extends Resource
                         ->label('Ver')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        ->form(fn (Schema $schema) => static::viewForm($schema))
+                        ->form(fn(Schema $schema) => static::viewForm($schema))
                         ->modalHeading('Ver Servicio')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Cerrar'),
@@ -358,7 +419,7 @@ class ServiceResource extends Resource
                         ->modalDescription('¿Estás seguro de que quieres desactivar este servicio? Esto lo marcará como inactivo.')
                         ->modalSubmitActionLabel('Sí, desactivar')
                         ->modalCancelActionLabel('Cancelar')
-                        ->visible(fn ($record) => ($record->status instanceof ServiceStatusEnum ? $record->status->value : $record->status) !== 'inactive'),
+                        ->visible(fn($record) => ($record->status instanceof ServiceStatusEnum ? $record->status->value : $record->status) !== 'inactive'),
                     Action::make('activate')
                         ->label('Activar')
                         ->icon('heroicon-o-check-circle')
@@ -371,7 +432,7 @@ class ServiceResource extends Resource
                         ->modalDescription('¿Estás seguro de que quieres activar este servicio?')
                         ->modalSubmitActionLabel('Sí, activar')
                         ->modalCancelActionLabel('Cancelar')
-                        ->visible(fn ($record) => ($record->status instanceof ServiceStatusEnum ? $record->status->value : $record->status) === 'inactive'),
+                        ->visible(fn($record) => ($record->status instanceof ServiceStatusEnum ? $record->status->value : $record->status) === 'inactive'),
                     DeleteAction::make()
                         ->label('Eliminar')
                         ->icon('heroicon-o-trash')
@@ -394,7 +455,7 @@ class ServiceResource extends Resource
                         ->label('Activar Seleccionados')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn ($records) => $records->each->update(['status' => 'active']))
+                        ->action(fn($records) => $records->each->update(['status' => 'active']))
                         ->requiresConfirmation()
                         ->modalHeading('Activar Servicios')
                         ->modalDescription('¿Estás seguro de que quieres activar los servicios seleccionados?')
@@ -404,7 +465,7 @@ class ServiceResource extends Resource
                         ->label('Desactivar Seleccionados')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn ($records) => $records->each->update(['status' => 'inactive']))
+                        ->action(fn($records) => $records->each->update(['status' => 'inactive']))
                         ->requiresConfirmation()
                         ->modalHeading('Desactivar Servicios')
                         ->modalDescription('¿Estás seguro de que quieres desactivar los servicios seleccionados?')

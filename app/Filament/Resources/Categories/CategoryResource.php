@@ -20,6 +20,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\RichEditor;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -66,26 +67,55 @@ class CategoryResource extends Resource
                     ->unique(ignoreRecord: true)
                     ->rules(['alpha_dash'])
                     ->helperText('Se genera automáticamente desde el nombre. Puedes editarlo si es necesario.'),
-                Textarea::make('description')
+                RichEditor::make('description')
                     ->label('Descripción')
-                    ->rows(3)
-                    ->columnSpanFull(),
+                    ->toolbarButtons([
+                        'attachFiles',
+                        'blockquote',
+                        'bold',
+                        'bulletList',
+                        'codeBlock',
+                        'h2',
+                        'h3',
+                        'italic',
+                        'link',
+                        'orderedList',
+                        'redo',
+                        'strike',
+                        'underline',
+                        'undo',
+                    ])
+                    ->columnSpanFull()
+                    ->height('350px'),
                 FileUpload::make('cover_image')
                     ->label('Imagen de Portada')
                     ->image()
                     ->directory('categories')
-                    ->visibility('public')
                     ->columnSpanFull()
-                    ->imagePreviewHeight('250')
-                    ->panelLayout('integrated'),
+                    ->imagePreviewHeight('300')
+                    ->panelLayout('integrated')
+                    ->panelAspectRatio('2:1')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('1920')
+                    ->imageResizeTargetHeight('1080')
+                    ->imageEditor()
+                    ->imageEditorAspectRatios([
+                        '16:9',
+                        '4:3',
+                        '1:1',
+                    ])
+                    ->previewable(true)
+                    ->preserveFilenames()
+                    ->dehydrated(true)
+                    ->required(false),
                 Toggle::make('status')
                     ->label('Estado Activo')
                     ->helperText('Activa o desactiva esta categoría')
                     ->default(true)
                     ->onColor('success')
                     ->offColor('danger')
-                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true)
-                    ->dehydrateStateUsing(fn ($state) => $state ? 'active' : 'inactive'),
+                    ->formatStateUsing(fn($state) => $state === 'active' || $state === true)
+                    ->dehydrateStateUsing(fn($state) => $state ? 'active' : 'inactive'),
             ]);
     }
 
@@ -99,24 +129,26 @@ class CategoryResource extends Resource
                 TextInput::make('slug')
                     ->label('Slug')
                     ->disabled(),
-                Textarea::make('description')
+                RichEditor::make('description')
                     ->label('Descripción')
-                    ->rows(3)
                     ->disabled()
                     ->columnSpanFull(),
                 FileUpload::make('cover_image')
                     ->label('Imagen de Portada')
                     ->image()
-                    ->disabled()
+                    ->directory('categories')
                     ->columnSpanFull()
-                    ->imagePreviewHeight('250')
-                    ->panelLayout('integrated'),
+                    ->columnSpanFull()
+                    ->imagePreviewHeight('300')
+                    ->panelLayout('integrated')
+                    ->panelAspectRatio('2:1')
+                    ->previewable(true),
                 Toggle::make('status')
                     ->label('Estado Activo')
                     ->disabled()
                     ->onColor('success')
                     ->offColor('danger')
-                    ->formatStateUsing(fn ($state) => $state === 'active' || $state === true),
+                    ->formatStateUsing(fn($state) => $state === 'active' || $state === true),
             ]);
     }
 
@@ -135,6 +167,7 @@ class CategoryResource extends Resource
                 TextEntry::make('description')
                     ->label('Descripción')
                     ->placeholder('Sin descripción')
+                    ->html()
                     ->columnSpanFull(),
                 ImageEntry::make('cover_image')
                     ->label('Imagen de Portada')
@@ -144,12 +177,12 @@ class CategoryResource extends Resource
                 TextEntry::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
+                    ->color(fn($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'success',
                         'inactive' => 'danger',
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
+                    ->formatStateUsing(fn($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
                         default => $state,
@@ -184,19 +217,16 @@ class CategoryResource extends Resource
                     ->copyable()
                     ->copyMessage('Slug copiado')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('description')
-                    ->label('Descripción')
-                    ->limit(50)
-                    ->wrap(),
+                // ... columna de descripción eliminada ...
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
+                    ->color(fn($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'success',    // 🟢 Verde para Activo
                         'inactive' => 'danger',   // 🔴 Rojo para Inactivo
                         default => 'gray',
                     })
-                    ->formatStateUsing(fn ($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
+                    ->formatStateUsing(fn($state): string => match ($state instanceof StatusEnum ? $state->value : $state) {
                         'active' => 'Activo',
                         'inactive' => 'Inactivo',
                         default => $state,
@@ -223,7 +253,7 @@ class CategoryResource extends Resource
                     ->default('active'),
                 \Filament\Tables\Filters\Filter::make('only_active')
                     ->label('Solo Activos')
-                    ->query(fn ($query) => $query->where('status', 'active'))
+                    ->query(fn($query) => $query->where('status', 'active'))
                     ->default(),
             ])
             ->actions([
@@ -232,7 +262,7 @@ class CategoryResource extends Resource
                         ->label('Ver')
                         ->icon('heroicon-o-eye')
                         ->color('info')
-                        ->form(fn (Schema $schema) => static::viewForm($schema))
+                        ->form(fn(Schema $schema) => static::viewForm($schema))
                         ->modalHeading('Ver Categoría')
                         ->modalSubmitAction(false)
                         ->modalCancelActionLabel('Cerrar'),
@@ -252,7 +282,7 @@ class CategoryResource extends Resource
                         ->modalDescription('¿Estás seguro de que quieres desactivar esta categoría? Esto la marcará como inactiva.')
                         ->modalSubmitActionLabel('Sí, desactivar')
                         ->modalCancelActionLabel('Cancelar')
-                        ->visible(fn ($record) => ($record->status instanceof StatusEnum ? $record->status->value : $record->status) !== 'inactive'),
+                        ->visible(fn($record) => ($record->status instanceof StatusEnum ? $record->status->value : $record->status) !== 'inactive'),
                     Action::make('activate')
                         ->label('Activar')
                         ->icon('heroicon-o-check-circle')
@@ -265,7 +295,7 @@ class CategoryResource extends Resource
                         ->modalDescription('¿Estás seguro de que quieres activar esta categoría?')
                         ->modalSubmitActionLabel('Sí, activar')
                         ->modalCancelActionLabel('Cancelar')
-                        ->visible(fn ($record) => ($record->status instanceof StatusEnum ? $record->status->value : $record->status) === 'inactive'),
+                        ->visible(fn($record) => ($record->status instanceof StatusEnum ? $record->status->value : $record->status) === 'inactive'),
                     DeleteAction::make()
                         ->label('Eliminar')
                         ->icon('heroicon-o-trash')
@@ -288,7 +318,7 @@ class CategoryResource extends Resource
                         ->label('Activar Seleccionados')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn ($records) => $records->each->update(['status' => 'active']))
+                        ->action(fn($records) => $records->each->update(['status' => 'active']))
                         ->requiresConfirmation()
                         ->modalHeading('Activar Categorías')
                         ->modalDescription('¿Estás seguro de que quieres activar las categorías seleccionadas?')
@@ -298,7 +328,7 @@ class CategoryResource extends Resource
                         ->label('Desactivar Seleccionados')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn ($records) => $records->each->update(['status' => 'inactive']))
+                        ->action(fn($records) => $records->each->update(['status' => 'inactive']))
                         ->requiresConfirmation()
                         ->modalHeading('Desactivar Categorías')
                         ->modalDescription('¿Estás seguro de que quieres desactivar las categorías seleccionadas?')
