@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class EmployeesChart extends ChartWidget
 {
-    protected static ?string $heading = 'Estado de Empleados';
+    protected ?string $heading = 'Estado de Empleados';
 
     protected function getData(): array
     {
