@@ -24,7 +24,7 @@ class ManageEmployees extends ManageRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            \App\Filament\Widgets\EmployeesChart::class,
+            \App\Filament\Widgets\EmployeeStatsOverview::class,
         ];
     }
 }
