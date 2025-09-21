@@ -291,4 +291,5 @@ class EmployeeResource extends Resource
             'index' => ManageEmployees::route('/'),
         ];
     }
+
 }
