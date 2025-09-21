@@ -16,9 +16,7 @@ use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\RichEditor;
 use Filament\Infolists\Components\ImageEntry;
@@ -85,8 +83,7 @@ class CategoryResource extends Resource
                         'underline',
                         'undo',
                     ])
-                    ->columnSpanFull()
-                    ->height('350px'),
+                    ->columnSpanFull(),
                 FileUpload::make('cover_image')
                     ->label('Imagen de Portada')
                     ->image()
@@ -119,47 +116,19 @@ class CategoryResource extends Resource
             ]);
     }
 
-    public static function viewForm(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                TextInput::make('name')
-                    ->label('Nombre')
-                    ->disabled(),
-                TextInput::make('slug')
-                    ->label('Slug')
-                    ->disabled(),
-                RichEditor::make('description')
-                    ->label('Descripción')
-                    ->disabled()
-                    ->columnSpanFull(),
-                FileUpload::make('cover_image')
-                    ->label('Imagen de Portada')
-                    ->image()
-                    ->directory('categories')
-                    ->columnSpanFull()
-                    ->columnSpanFull()
-                    ->imagePreviewHeight('300')
-                    ->panelLayout('integrated')
-                    ->panelAspectRatio('2:1')
-                    ->previewable(true),
-                Toggle::make('status')
-                    ->label('Estado Activo')
-                    ->disabled()
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->formatStateUsing(fn($state) => $state === 'active' || $state === true),
-            ]);
-    }
-
     public static function infolist(Schema $schema): Schema
     {
         return $schema
             ->components([
+                ImageEntry::make('cover_image')
+                    ->label('Imagen de Portada')
+                    ->height(200)
+                    ->placeholder('Sin imagen')
+                    ->alignCenter()
+                    ->columnSpanFull(),
                 TextEntry::make('name')
                     ->label('Nombre')
-                    ->size('lg')
-                    ->weight('bold'),
+                    ->size('lg'),
                 TextEntry::make('slug')
                     ->label('Slug')
                     ->copyable()
@@ -168,11 +137,6 @@ class CategoryResource extends Resource
                     ->label('Descripción')
                     ->placeholder('Sin descripción')
                     ->html()
-                    ->columnSpanFull(),
-                ImageEntry::make('cover_image')
-                    ->label('Imagen de Portada')
-                    ->height(200)
-                    ->placeholder('Sin imagen')
                     ->columnSpanFull(),
                 TextEntry::make('status')
                     ->label('Estado')
@@ -261,15 +225,12 @@ class CategoryResource extends Resource
                     ViewAction::make()
                         ->label('Ver')
                         ->icon('heroicon-o-eye')
-                        ->color('info')
-                        ->form(fn(Schema $schema) => static::viewForm($schema))
-                        ->modalHeading('Ver Categoría')
-                        ->modalSubmitAction(false)
-                        ->modalCancelActionLabel('Cerrar'),
+                        ->color('info'),
                     EditAction::make()
                         ->label('Editar')
                         ->icon('heroicon-o-pencil')
-                        ->color('warning'),
+                        ->color('warning')
+                        ->modal(),
                     Action::make('deactivate')
                         ->label('Desactivar')
                         ->icon('heroicon-o-x-circle')

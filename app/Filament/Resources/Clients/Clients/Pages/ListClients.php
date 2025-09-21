@@ -9,6 +9,8 @@ use Filament\Resources\Pages\ListRecords;
 class ListClients extends ListRecords
 {
     protected static string $resource = ClientResource::class;
+    protected static ?string $title = 'Clientes';
+
 
     protected function getHeaderActions(): array
     {
@@ -17,7 +19,7 @@ class ListClients extends ListRecords
                 ->modalHeading('Agregar Cliente')
                 ->modalSubmitActionLabel('Guardar')
                 ->modalCancelActionLabel('Cancelar')
-                ->slideOver(),
+                ->modal(),
         ];
     }
 }
