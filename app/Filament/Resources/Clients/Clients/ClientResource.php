@@ -19,7 +19,14 @@ class ClientResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'first_name';
+    protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?string $navigationLabel = 'Clientes';
+
+    protected static ?string $modelLabel = 'Cliente';
+
+    protected static ?string $pluralModelLabel = 'Clientes';
+
 
     public static function form(Schema $schema): Schema
     {
@@ -28,11 +35,19 @@ class ClientResource extends Resource
                 \Filament\Forms\Components\FileUpload::make('image')
                     ->label('Foto de Perfil')
                     ->image()
-                    ->directory('clients')
-                    ->visibility('public')
                     ->columnSpanFull()
-                    ->preserveFilenames()
-                    ->required(false),
+                    ->imagePreviewHeight('300')
+                    ->panelLayout('integrated')
+                    ->panelAspectRatio('2:1')
+                    ->imageCropAspectRatio('16:9')
+                    ->imageResizeTargetWidth('1920')
+                    ->imageResizeTargetHeight('1080')
+                    ->imageEditor()
+                    ->imageEditorAspectRatios([
+                        '16:9',
+                        '4:3',
+                        '1:1',
+                    ]),
                 \Filament\Forms\Components\TextInput::make('first_name')
                     ->label('Nombre')
                     ->required()
@@ -122,7 +137,9 @@ class ClientResource extends Resource
                     \Filament\Actions\ViewAction::make()
                         ->label('Ver')
                         ->icon('heroicon-o-eye')
-                        ->color('info'),
+                        ->color('info')
+                        ->modalHeading('Detalles del Cliente')
+                        ->modalDescription('Información del cliente seleccionada.'),
                     \Filament\Actions\EditAction::make()
                         ->label('Editar')
                         ->icon('heroicon-o-pencil')
@@ -204,7 +221,54 @@ class ClientResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->striped()
             ->paginated([10, 25, 50, 100]);
+    }
 
+
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                \Filament\Infolists\Components\ImageEntry::make('image')
+                    ->label('Foto de Perfil')
+                    ->height(150)
+                    ->circular()
+                    ->placeholder('Sin imagen'),
+                \Filament\Infolists\Components\TextEntry::make('first_name')
+                    ->label('Nombre')
+                    ->extraAttributes(['class' => 'font-bold text-lg inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('last_name')
+                    ->label('Apellido')
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('status')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn($state): string => match ($state) {
+                        'active' => 'success',
+                        'inactive' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn($state): string => match ($state) {
+                        'active' => 'Activo',
+                        'inactive' => 'Inactivo',
+                        default => $state,
+                    })
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('email')
+                    ->label('Email')
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('phone_number')
+                    ->label('Teléfono')
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('created_at')
+                    ->label('Creado')
+                    ->dateTime('d/m/Y H:i')
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+                \Filament\Infolists\Components\TextEntry::make('updated_at')
+                    ->label('Actualizado')
+                    ->dateTime('d/m/Y H:i')
+                    ->extraAttributes(['class' => 'inline-block w-full md:w-1/2']),
+            ]);
     }
 
     public static function getPages(): array
