@@ -20,4 +20,11 @@ class ManageServices extends ManageRecords
                 ->createAnother(false),
         ];
     }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\ServiceStatsOverview::class,
+        ];
+    }
 }
