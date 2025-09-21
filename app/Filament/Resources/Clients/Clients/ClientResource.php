@@ -17,7 +17,7 @@ class ClientResource extends Resource
 {
     protected static ?string $model = Client::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUser;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -274,7 +274,7 @@ class ClientResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListClients::route('/'),
+            'index' => \App\Filament\Resources\Clients\Clients\Pages\ManageClients::route('/'),
         ];
     }
 }
